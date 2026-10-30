@@ -1,7 +1,7 @@
 "use client";
 
 import type { Spec } from "@json-render/react";
-import type { Interaction } from "eve/events";
+import { signInEnding, type Interaction } from "eve/events";
 import type { EveMessage, EveMessagePart, EveToolPart } from "eve/react";
 import { CheckCircleIcon, ChevronRightIcon, ExternalLinkIcon, XCircleIcon } from "lucide-react";
 import { Fragment, useState, type SubmitEvent } from "react";
@@ -133,15 +133,29 @@ function InteractionActions({ canRespond, interaction, onAnswers }: { readonly c
   const [isSubmitting, setIsSubmitting] = useState(false);
   const details = interaction.call?.input === undefined ? undefined : inputSummary.safeParse(interaction.call.input);
   const submit = async (optionId: string) => { setIsSubmitting(true); try { await onAnswers([{ interactionId: interaction.interactionId, optionId }]); } finally { setIsSubmitting(false); } };
-  if (interaction.answer !== undefined || interaction.status === "settled") { const approved = interaction.outcome === "accepted"; const Icon = approved ? CheckCircleIcon : XCircleIcon; return <div className="text-muted-foreground flex w-full max-w-md items-center gap-2 rounded-md border px-3 py-2 text-sm"><Icon className={cn("size-4 shrink-0", approved ? "text-success" : "text-destructive")} /><span className="text-foreground font-medium">{approved ? "Approved" : "Declined"}</span><span className="truncate">{interaction.call?.name}</span></div>; }
+  if (interaction.answer !== undefined || interaction.status === "settled") { const label = interactionOutcomeLabel(interaction.outcome); const approved = interaction.outcome === "accepted"; const Icon = approved ? CheckCircleIcon : XCircleIcon; return <div className="text-muted-foreground flex w-full max-w-md items-center gap-2 rounded-md border px-3 py-2 text-sm"><Icon className={cn("size-4 shrink-0", approved ? "text-success" : interaction.outcome === "declined" ? "text-destructive" : "text-muted-foreground")} /><span className="text-foreground font-medium">{label}</span><span className="truncate">{interaction.call?.name}</span></div>; }
   return <div className="border-warning/30 bg-warning/5 w-full max-w-md space-y-3 rounded-md border p-3"><p className="text-sm font-medium">{interaction.request.prompt}</p>{details?.success ? <dl className="bg-background/60 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-sm">{details.data.slice(0, 4).map(([name, value]) => <Fragment key={name}><dt className="text-muted-foreground">{name}</dt><dd className="truncate">{value}</dd></Fragment>)}</dl> : null}<div className="flex flex-wrap gap-2">{interaction.request.options?.map((option, index) => <Button disabled={isSubmitting || !canRespond(interaction.interactionId)} key={option.id} onClick={() => void submit(option.id)} size="sm" type="button" variant={option.style === "danger" ? "destructive" : option.style === "primary" || index === 0 ? "default" : "outline"}>{option.label}</Button>)}</div></div>;
+}
+
+function interactionOutcomeLabel(outcome: Interaction["outcome"]): string {
+  switch (outcome) {
+    case "accepted": return "Approved";
+    case "declined": return "Declined";
+    case "invalid": return "Invalid response";
+    case "failed": return "Failed";
+    case "withdrawn": return "Withdrawn";
+    case "interrupted": return "Interrupted";
+    case "abandoned": return "Abandoned";
+    case "expired": return "Expired";
+    default: return "Ended";
+  }
 }
 
 function SignInPrompt({ part }: { readonly part: Interaction }) {
   const signIn = part.request.signIn;
   const name = signIn?.displayName ?? signIn?.name ?? "the service";
   const complete = part.status === "settled";
-  return <div className="border-info/30 bg-info/5 w-full max-w-md space-y-3 rounded-md border p-3"><p className="text-sm font-medium">{complete ? `${name} ${part.outcome === "accepted" ? "connected" : "authorization ended"}` : `Connect ${name}`}</p><p className="text-muted-foreground text-sm">{complete ? part.reason : part.request.prompt}</p>{!complete && signIn?.instructions ? <p className="text-muted-foreground text-sm">{signIn.instructions}</p> : null}{!complete && signIn?.userCode ? <code className="font-mono">Code: {signIn.userCode}</code> : null}{!complete && signIn?.url ? <Button asChild size="sm"><a href={signIn.url} rel="noreferrer" target="_blank"><ExternalLinkIcon className="size-4" />Sign in with {name}</a></Button> : null}</div>;
+  return <div className="border-info/30 bg-info/5 w-full max-w-md space-y-3 rounded-md border p-3"><p className="text-sm font-medium">{complete ? `${name} ${signInEnding(part.outcome ?? "failed")}` : `Connect ${name}`}</p><p className="text-muted-foreground text-sm">{complete ? part.reason : part.request.prompt}</p>{!complete && signIn?.instructions ? <p className="text-muted-foreground text-sm">{signIn.instructions}</p> : null}{!complete && signIn?.userCode ? <code className="font-mono">Code: {signIn.userCode}</code> : null}{!complete && signIn?.url ? <Button asChild size="sm"><a href={signIn.url} rel="noreferrer" target="_blank"><ExternalLinkIcon className="size-4" />Sign in with {name}</a></Button> : null}</div>;
 }
 
 function partKey(part: EveMessagePart, index: number): string {
