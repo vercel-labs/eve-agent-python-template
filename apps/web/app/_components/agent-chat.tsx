@@ -1,7 +1,7 @@
 "use client";
 
 import { ClientError } from "eve/client";
-import { activeTurn, failure, interaction, interactions, turns } from "eve/events";
+import { activeTurn, failure, interaction, turns } from "eve/events";
 import { useEveAgent } from "eve/react";
 import { AlertCircleIcon, BrainIcon, SquareIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -341,7 +341,7 @@ function getChatView(
 
 /**
  * Decides whether to show the thinking indicator, and which empty assistant
- * message (one with only `step-start` parts) it replaces.
+ * message (one with no visible response, tool, or interaction parts) it replaces.
  *
  * @param agent - The `useEveAgent` result.
  * @param isBusy - Whether a turn is submitted or streaming.
@@ -359,7 +359,11 @@ function getPendingAssistant(
     return { hiddenMessageId: undefined, showThinking: true };
   }
   const isEmptyShell = lastMessage.parts.every(
-    (part) => part.type !== "text" && part.type !== "reasoning" && part.type !== "tool"
+    (part) =>
+      part.type !== "text" &&
+      part.type !== "reasoning" &&
+      part.type !== "tool" &&
+      part.type !== "interaction"
   );
   return {
     hiddenMessageId: isEmptyShell ? lastMessage.id : undefined,
@@ -393,10 +397,6 @@ function ChatConversation({
   const { messages } = agent;
   const canRespond = (interactionId: string) =>
     !view.isResuming && interaction(agent.view, interactionId)?.status === "open";
-  const questionsFor = (callId: string) =>
-    interactions(agent.view).filter(
-      (input) => input.request.kind === "question" && input.call?.callId === callId
-    );
   const scrollKey =
     messages.length > 0 && view.activeSessionId !== undefined
       ? `eve:web-chat-scroll:${view.activeSessionId}`
@@ -422,7 +422,6 @@ function ChatConversation({
               key={message.id}
               message={message}
               onAnswers={onAnswers}
-              questionsFor={questionsFor}
             />
           )
         )}
@@ -526,16 +525,16 @@ function PendingThinking() {
 /**
  * Finds the latest turn failure, ignoring failures a later turn or message superseded.
  *
- * @param events - The agent's event log.
+ * @param view - The agent's committed session view.
  * @returns A user-facing failure message, or `undefined` when the latest turn did not fail.
  */
 function getLatestTurnFailure(view: EveAgent["view"]): string | undefined {
   const latestTurn = turns(view).at(-1);
   const turnFailure = failure(view, latestTurn?.turnId);
   if (turnFailure !== undefined) {
-      return turnFailure.code === "MODEL_CALL_FAILED"
-        ? "The model is temporarily unavailable. Please try again."
-        : turnFailure.message;
+    return turnFailure.code === "MODEL_CALL_FAILED"
+      ? "The model is temporarily unavailable. Please try again."
+      : turnFailure.message;
   }
   return undefined;
 }
