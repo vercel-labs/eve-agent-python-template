@@ -465,6 +465,13 @@ function InteractionActions({
       : inputSummary.safeParse(interaction.call.input);
 
   const submit = async (optionId: string) => {
+    if (
+      isSubmitting ||
+      interaction.answer !== undefined ||
+      !canRespond(interaction.interactionId)
+    ) {
+      return;
+    }
     setIsSubmitting(true);
     try {
       await onAnswers([{ interactionId: interaction.interactionId, optionId }]);
@@ -500,6 +507,11 @@ function InteractionActions({
   return (
     <div className="border-warning/30 bg-warning/5 w-full max-w-md space-y-3 rounded-md border p-3">
       <p className="text-sm font-medium">{interaction.request.prompt}</p>
+      {interaction.answer !== undefined ? (
+        <p className="text-muted-foreground text-sm" role="status">
+          Response submitted. Waiting for confirmation.
+        </p>
+      ) : null}
       {details?.success ? (
         <dl className="bg-background/60 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-sm">
           {details.data.slice(0, MAX_SUMMARY_ROWS).map(([name, value]) => (
@@ -513,7 +525,11 @@ function InteractionActions({
       <div className="flex flex-wrap gap-2">
         {interaction.request.options?.map((option, index) => (
           <Button
-            disabled={isSubmitting || !canRespond(interaction.interactionId)}
+            disabled={
+              isSubmitting ||
+              interaction.answer !== undefined ||
+              !canRespond(interaction.interactionId)
+            }
             key={option.id}
             onClick={() => {
               void submit(option.id);
