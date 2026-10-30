@@ -1,6 +1,6 @@
 "use client";
 
-import type { EveDynamicToolPart } from "eve/react";
+import type { EveToolPart } from "eve/react";
 import {
   ArrowRightIcon,
   CheckCircle2Icon,
@@ -64,12 +64,12 @@ const CARD_RENDERERS: Readonly<Record<string, CardRenderer>> = {
  * @param part - The tool part from the message.
  * @returns The card, or `undefined` to fall back to the generic tool display.
  */
-export function renderToolCard(part: EveDynamicToolPart): ReactNode | undefined {
-  if (part.state !== "output-available" || part.partial === true) {
+export function renderToolCard(part: EveToolPart): ReactNode | undefined {
+  if (part.state !== "completed") {
     return undefined;
   }
-  const render = CARD_RENDERERS[part.toolName];
-  return render === undefined ? undefined : render(part.output, part.toolName);
+  const render = CARD_RENDERERS[part.name];
+  return render === undefined ? undefined : render(part.output, part.name);
 }
 
 const numberFormat = new Intl.NumberFormat(undefined, {

@@ -55,7 +55,7 @@ When you add or remove a tool, update the Tools, Tasks, or Python tools section 
 
 ### Model and session limits
 
-Change `model` in [agent/agent.ts](agent/agent.ts) to use another [AI Gateway model](https://vercel.com/ai-gateway/models). The template uses `anthropic/claude-sonnet-5` and limits each conversation to `300_000` input tokens through `maxInputTokensPerSession`. See [eve's agent configuration](https://eve.dev/docs/agent-config) for output and cost limits.
+Change `model` in [agent/agent.ts](agent/agent.ts) to use another [AI Gateway model](https://vercel.com/ai-gateway/models). The template uses `anthropic/claude-sonnet-5` and sets `limits.sessionUsage` to stop after `300_000` total input tokens in each continuation window. When someone selects **Continue** at the usage prompt, eve starts a new window. See [eve's agent configuration](https://eve.dev/docs/agent-config) for output and cost limits.
 
 ## Add or remove tools
 
