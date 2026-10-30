@@ -4,7 +4,7 @@ import { defineAgent } from "eve";
 // authenticates with project OIDC; locally, run `eve link` or set AI_GATEWAY_API_KEY.
 export default defineAgent({
   limits: {
-    maxInputTokensPerSession: 300_000,
+    sessionUsage: ({ window }) => window.inputTokens >= 300_000,
   },
   model: "anthropic/claude-sonnet-5",
 });
