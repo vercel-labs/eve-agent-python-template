@@ -56,7 +56,7 @@ Until you set `EVE_CHAT_PASSWORD`, the sign-in page asks you to set it. To repla
 
 ## Local development
 
-Use Node.js 24, pnpm, and [uv](https://docs.astral.sh/uv/), which installs the backend's Python packages. Install the [Vercel CLI](https://vercel.com/docs/cli), then clone your repository and run:
+Use Node.js 24, pnpm, and [uv](https://docs.astral.sh/uv/), which installs the backend's Python packages. Install [Vercel CLI](https://vercel.com/docs/cli) 65.14.0 or later, which builds the agent that `vercel.ts` adds with `withEve`, then clone your repository and run:
 
 ```sh
 pnpm install
