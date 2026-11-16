@@ -260,7 +260,7 @@ export function AgentChat({
  */
 function useSignInRedirect(error: Error | undefined) {
   const isUnauthenticated =
-    error instanceof ClientError && error.status === 401;
+    ClientError.is(error) && error.status === 401;
   useEffect(() => {
     if (!isUnauthenticated) {
       return;

@@ -1,12 +1,12 @@
-import { eveChannel } from "eve/channels/eve";
-import { localDev, vercelOidc, type AuthFn } from "eve/channels/auth";
+import { eveChannel, type EveAuthFn } from "eve/channels/eve";
+import { localDev, vercelOidc } from "eve/channels/auth";
 import { getPasswordSessionFromHeaders } from "../../apps/web/lib/password-auth";
 
 /**
  * Admits browser requests that carry the signed session cookie the web app sets
  * after the user enters EVE_CHAT_PASSWORD. Returns null (skip) otherwise.
  */
-const passwordAuth: AuthFn<Request> = async (request) => {
+const passwordAuth: EveAuthFn = async (request) => {
   if (!getPasswordSessionFromHeaders(request.headers)) {
     return null;
   }
